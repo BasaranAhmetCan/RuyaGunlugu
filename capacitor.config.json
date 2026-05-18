@@ -1,0 +1,26 @@
+{
+  "appId": "com.dreamjournal.app",
+  "appName": "Rüya Günlüğü",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#080B14",
+      "showSpinner": true,
+      "spinnerColor": "#8B5CF6"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_notification",
+      "iconColor": "#8B5CF6",
+      "sound": "alarm_gentle.wav"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#080B14"
+    }
+  }
+}
