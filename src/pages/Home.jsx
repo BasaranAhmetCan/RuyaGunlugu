@@ -41,14 +41,6 @@ const Home = () => {
       recognition.lang = 'tr-TR';
 
       recognition.onresult = (event) => {
-        let currentTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          currentTranscript += event.results[i][0].transcript;
-        }
-        // Mevcut metni koruyup üzerine ekleme mantığı daha stabil olabilir ama basitlik adına 
-        // sürekli dinlenen metni geçici olarak ekliyoruz.
-        // Düzgün bir ekleme için interim sonuçları handle etmek gerekir.
-        // Şimdilik basitçe son final sonucu ekleyelim:
         let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
           if (event.results[i].isFinal) {
@@ -99,7 +91,8 @@ const Home = () => {
     );
   };
 
-  const handleSave = () => {
+  // İrem'in Canlı Ücretsiz Gemini Sistemiyle %100 Uyumlu Yeni Fonksiyon
+  const handleSave = async () => {
     if (!dreamText.trim()) return;
     
     if (isListening && recognitionRef.current) {
@@ -109,24 +102,22 @@ const Home = () => {
     
     setIsAnalyzing(true);
     
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      const newDreamId = addDream({
+    try {
+      // 1. Senin yazdığın canlı Gemini backend'ine bağlanıp cevabı sabırla bekliyoruz (await)
+      const newDreamId = await addDream({
         text: dreamText,
-        keywords: selectedTags.length > 0 ? selectedTags : ["GİZEM", "BİLİNÇALTI"],
-        interpretations: {
-          classic: "Rüyanızdaki imgeler, yakın zamanda hayatınızda belirsizliklerle yüzleşeceğinize ve bunları aşarak feraha çıkacağınıza işaret ediyor.",
-          freud: "Kendi yazdığınız bu metin, bilinçaltınızdaki günlük endişelerin ve saklı tuttuğunuz dürtülerin doğrudan dışavurumudur.",
-          jung: "Burada kullandığınız kelimeler, kolektif bilinçdışınızdan gelen uyarıcı arketipsel figürleri çağrıştırıyor. Bireyleşme yolculuğunuzda önemli bir adım.",
-          islamic: "Bu rüya, iç huzuru bulmak için manevi yönünüze daha fazla ağırlık vermeniz gerektiğine dair ilahi bir işarettir.",
-          astrological: `${userProfile?.zodiac || 'Burcunuz'} etkisiyle gezegensel transitler, bu rüyanın karmik döngülerinizle bağlantılı olduğunu gösteriyor.`
-        },
-        sentiment: "neutral",
-        imageUrl: null
+        keywords: selectedTags.length > 0 ? selectedTags : ["GİZEM", "BİLİNÇALTI"]
       });
       
+      setIsAnalyzing(false);
+      
+      // 2. Canlı gelen o kesin ID ile detay sayfasını açıyoruz, artık hata bitti!
       navigate(`/dream/${newDreamId}`);
-    }, 2500);
+      
+    } catch (error) {
+      console.error("Yönlendirme sırasında hata oluştu:", error);
+      setIsAnalyzing(false);
+    }
   };
 
   return (

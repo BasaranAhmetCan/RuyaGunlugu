@@ -12,25 +12,25 @@ const DreamContext = createContext();
 export const useDreamContext = () => useContext(DreamContext);
 
 export const DreamProvider = ({ children }) => {
-  // --- Kullanıcı ve Onboarding ---
+  // --- Kullanıcı Profili ---
   const [userProfile, setUserProfile] = useState(() => {
     const saved = localStorage.getItem('dreamAI_user');
-    return saved ? JSON.parse(saved) : null;
+    return saved ? JSON.parse(saved) : { zodiac: "Bilinmiyor" };
   });
 
-  // --- Rüyalar ---
+  // --- Rüyalar Listesi ---
   const [dreams, setDreams] = useState(() => {
     const saved = localStorage.getItem('dreamAI_dreams');
-    return saved ? JSON.parse(saved) : mockDreams;
+    // Eğer hafıza boşsa hata vermemesi için boş dizi ile başlatıyoruz
+    return saved ? JSON.parse(saved) : [];
   });
 
-  // --- Çoklu Alarmlar ---
+  // --- Alarmlar ---
   const [alarms, setAlarms] = useState(() => {
     const saved = localStorage.getItem('dreamAI_alarms');
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Veriler değiştikçe LocalStorage'a kaydet
   useEffect(() => {
     if (userProfile) localStorage.setItem('dreamAI_user', JSON.stringify(userProfile));
   }, [userProfile]);
@@ -43,23 +43,71 @@ export const DreamProvider = ({ children }) => {
     localStorage.setItem('dreamAI_alarms', JSON.stringify(alarms));
   }, [alarms]);
 
-  // Native platformda uygulama başladığında alarmları yeniden zamanla
-  useEffect(() => {
-    if (isNativePlatform() && alarms.length > 0) {
-      rescheduleAllAlarms(alarms);
-    }
-  }, []); // Sadece ilk mount'ta çalışır
+  // Yeni rüya ekleme köprüsü
+  const addDream = async (dreamData) => {
+    // Garanti olması için saniyeye dayalı benzersiz bir ID'yi en başta üretiyoruz
+    const generatedId = String(Math.floor(Math.random() * 1000000) + Date.now());
+    
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/analyze-dream", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          text: dreamData.text,
+          zodiac: userProfile?.zodiac || "Bilinmiyor"
+        })
+      });
 
-  // Yeni rüya ekleme
-  const addDream = (dreamData) => {
-    const newDream = {
-      id: Date.now().toString(),
-      date: new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' }),
-      ...dreamData,
-      isFavorite: false
-    };
-    setDreams(prev => [newDream, ...prev]);
-    return newDream.id;
+      if (!response.ok) {
+        throw new Error("Backend api hatası");
+      }
+
+      const apiResult = await response.json();
+
+      const newDream = {
+        id: generatedId, // <--- Sayfa yönlendirmesinin aradığı kesin ID
+        date: new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' }),
+        text: dreamData.text,
+        title: dreamData.title || "Rüya Analizi",
+        sentiment: apiResult.sentiment || "Nötr",
+        classicMeaning: apiResult.classic_meaning || "Yorum yüklenemedi.",
+        freudMeaning: apiResult.freud_meaning || "Yorum yüklenemedi.",
+        jungMeaning: apiResult.jung_meaning || "Yorum yüklenemedi.",
+        islamicMeaning: apiResult.islamic_meaning || "Yorum yüklenemedi.",
+        astrologicalMeaning: apiResult.astrological_meaning || "Yorum yüklenemedi.",
+        imageUrl: apiResult.image_url || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23",
+        keywords: apiResult.keywords || ["dream"],
+        isFavorite: false
+      };
+
+      setDreams(prev => [newDream, ...prev]);
+      return generatedId; // <--- Ahmet'in sayfasına başarıyla ID'yi fırlatıyoruz
+
+    } catch (error) {
+      console.error("Köprü hatası, taslak moda geçiliyor:", error);
+      
+      // Çökme olmasın diye güvenli taslak modu
+      const fallbackDream = {
+        id: generatedId,
+        date: new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' }),
+        text: dreamData.text,
+        title: dreamData.title || "Geçici Rüya Analizi",
+        sentiment: "Nötr",
+        classicMeaning: "Sistem şu an meşgul, daha sonra tekrar deneyin.",
+        freudMeaning: "Sistem şu an meşgul, daha sonra tekrar deneyin.",
+        jungMeaning: "Sistem şu an meşgul, daha sonra tekrar deneyin.",
+        islamicMeaning: "Sistem şu an meşgul, daha sonra tekrar deneyin.",
+        astrologicalMeaning: "Sistem şu an meşgul, daha sonra tekrar deneyin.",
+        imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23",
+        keywords: ["dream"],
+        isFavorite: false
+      };
+      
+      setDreams(prev => [fallbackDream, ...prev]);
+      return generatedId;
+    }
   };
 
   const toggleFavorite = (id) => {
@@ -74,54 +122,20 @@ export const DreamProvider = ({ children }) => {
     setDreams(prev => prev.filter(d => d.id !== id));
   };
 
-  // Alarm Fonksiyonları
   const addAlarm = (time, sound = 'gentle') => {
     const newAlarm = { id: Date.now().toString(), time, active: true, sound };
-    setAlarms(prev => [...prev, newAlarm]);
-    
-    // Native platformda bildirimi zamanla
-    if (isNativePlatform()) {
-      scheduleNativeAlarm(newAlarm);
-    }
+    setAlarms([...alarms, newAlarm]);
   };
 
   const updateAlarmSound = (id, sound) => {
-    setAlarms(prev => {
-      const updated = prev.map(a => a.id === id ? { ...a, sound } : a);
-      // Native platformda yeniden zamanla
-      if (isNativePlatform()) {
-        const alarm = updated.find(a => a.id === id);
-        if (alarm && alarm.active) {
-          scheduleNativeAlarm(alarm);
-        }
-      }
-      return updated;
-    });
+    setAlarms(prev => prev.map(a => a.id === id ? { ...a, sound } : a));
   };
 
   const toggleAlarm = (id) => {
-    setAlarms(prev => {
-      const updated = prev.map(a => a.id === id ? { ...a, active: !a.active } : a);
-      // Native platformda aktif/pasif yap
-      if (isNativePlatform()) {
-        const alarm = updated.find(a => a.id === id);
-        if (alarm) {
-          if (alarm.active) {
-            scheduleNativeAlarm(alarm);
-          } else {
-            cancelNativeAlarm(alarm.id);
-          }
-        }
-      }
-      return updated;
-    });
+    setAlarms(prev => prev.map(a => a.id === id ? { ...a, active: !a.active } : a));
   };
 
   const removeAlarm = (id) => {
-    // Native platformda bildirimi iptal et
-    if (isNativePlatform()) {
-      cancelNativeAlarm(id);
-    }
     setAlarms(prev => prev.filter(a => a.id !== id));
   };
 
