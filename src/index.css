@@ -2,23 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────
+   🌑 Dark Mode (Varsayılan) — Derin Gece Moru
+───────────────────────────────────────────────── */
+:root {
+  --dream-dark:   #080B14;
+  --dream-mid:    #0E0D1F;
+  --dream-light:  #1E1433;
+  --dream-accent: #8B5CF6;
+}
+
+/* ─────────────────────────────────────────────────
+   ☀️ Light Mode — Yumuşak Lavanta
+   Dark modun açık, havadar versiyonu.
+   Bembeyaz yok — yumuşak mor-gri tonlar.
+───────────────────────────────────────────────── */
+.light-mode {
+  --dream-dark:   #E8E4F5;   /* Ana arka plan — soluk lavanta */
+  --dream-mid:    #D9D3EE;   /* Nav / panel — biraz daha derin */
+  --dream-light:  #C9C1E6;   /* Kart kenarlıkları / ögeler */
+  --dream-accent: #6D28D9;   /* Vurgu moru — okunabilir */
+}
+
+/* ── Light modda YAZI renkleri ──────────────────── */
+.light-mode .text-white          { color: #1C0F4A !important; }
+.light-mode .text-white\/90      { color: rgba(28,15,74,0.90) !important; }
+.light-mode .text-white\/80      { color: rgba(28,15,74,0.80) !important; }
+.light-mode .text-white\/70      { color: rgba(28,15,74,0.70) !important; }
+.light-mode .text-white\/60      { color: rgba(28,15,74,0.60) !important; }
+.light-mode .text-white\/50      { color: rgba(28,15,74,0.50) !important; }
+.light-mode .text-white\/40      { color: rgba(28,15,74,0.40) !important; }
+.light-mode .text-white\/30      { color: rgba(28,15,74,0.30) !important; }
+.light-mode .text-white\/20      { color: rgba(28,15,74,0.20) !important; }
+.light-mode .text-white\/10      { color: rgba(28,15,74,0.10) !important; }
+
+/* ── Light modda KART / PANEL arka planlar ──────── */
+.light-mode .bg-white\/\[0\.01\] { background: rgba(109,40,217,0.04) !important; }
+.light-mode .bg-white\/\[0\.02\] { background: rgba(109,40,217,0.06) !important; }
+.light-mode .bg-white\/\[0\.03\] { background: rgba(109,40,217,0.07) !important; }
+.light-mode .bg-white\/\[0\.04\] { background: rgba(109,40,217,0.08) !important; }
+.light-mode .bg-white\/\[0\.05\] { background: rgba(109,40,217,0.09) !important; }
+.light-mode .bg-white\/5         { background: rgba(109,40,217,0.08) !important; }
+.light-mode .bg-white\/10        { background: rgba(109,40,217,0.12) !important; }
+.light-mode .bg-white\/20        { background: rgba(109,40,217,0.16) !important; }
+.light-mode .bg-white\/30        { background: rgba(109,40,217,0.20) !important; }
+
+/* ── Light modda BORDER renkleri ────────────────── */
+.light-mode .border-white\/5     { border-color: rgba(109,40,217,0.14) !important; }
+.light-mode .border-white\/10    { border-color: rgba(109,40,217,0.20) !important; }
+.light-mode .border-white\/20    { border-color: rgba(109,40,217,0.28) !important; }
+
+/* ── Light modda hardcoded arka planlar ─────────── */
+.light-mode .bg-\[\#1A1A2E\]     { background: #D9D3EE !important; }
+.light-mode .bg-\[\#080B14\]     { background: #E8E4F5 !important; }
+.light-mode .bg-\[\#0E0D1F\]     { background: #D9D3EE !important; }
+.light-mode .bg-\[\#0A0D18\]     { background: #EAE6F5 !important; }
+
+/* ── Light modda placeholder ────────────────────── */
+.light-mode ::placeholder        { color: rgba(28,15,74,0.30) !important; }
+
+/* ── Light modda input ──────────────────────────── */
+.light-mode input, .light-mode textarea {
+  color: rgba(28,15,74,0.85) !important;
+  caret-color: #6D28D9;
+}
+
+/* ── Light modda nav gölgesi ────────────────────── */
+.light-mode nav {
+  box-shadow: 0 -10px 40px rgba(109,40,217,0.12) !important;
+}
+
 @layer base {
   body {
     @apply bg-dream-dark text-white font-sans antialiased m-0 p-0;
   }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
+/* ─────────────────────────────────────────────────
+   Global Scrollbar
+───────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,0.5); }
+.light-mode ::-webkit-scrollbar-thumb { background: rgba(109,40,217,0.25); }
+
+/* ─────────────────────────────────────────────────
+   Tema Geçiş Animasyonu
+───────────────────────────────────────────────── */
+*, *::before, *::after {
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease !important;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.3); /* dream-accent */
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.5);
-}
+/* Framer Motion bileşenlerini engelleme */
+[data-framer-motion] { transition: none !important; }
+

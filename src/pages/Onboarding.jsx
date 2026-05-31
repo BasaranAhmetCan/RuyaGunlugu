@@ -113,12 +113,17 @@ const Onboarding = () => {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white/[0.02] border border-white/5 rounded-3xl p-8 backdrop-blur-xl"
+        className="w-full max-w-md bg-white/[0.02] border border-white/5 rounded-3xl p-8 backdrop-blur-xl flex flex-col items-center text-center"
       >
+        <img 
+          src="/icon.png" 
+          alt="Rüya Günlüğü Logo" 
+          className="w-24 h-24 mb-6 drop-shadow-[0_0_30px_rgba(139,92,246,0.5)]"
+        />
         <h1 className="text-2xl font-light mb-2 text-dream-accent">Hoş Geldiniz.</h1>
         <p className="text-white/50 text-sm font-light mb-8">Rüyalarınızın derinliklerine inmeden önce sizi biraz tanıyalım.</p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full text-left">
           <div className="flex flex-col gap-2">
             <label className="text-xs uppercase tracking-widest text-white/40">Adınız</label>
             <input 

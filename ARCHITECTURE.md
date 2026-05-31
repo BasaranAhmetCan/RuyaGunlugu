@@ -321,6 +321,10 @@ Tüm uygulama `<DreamProvider>` içinde sarılı. LocalStorage ile persistence s
 
 | Tarih | Yapılan İşlem | Değişen Dosyalar | Detay |
 |-------|---------------|------------------|-------|
+| 2026-05-31 | 🔌 Frontend→Backend bağlantısı kuruldu | vite.config.js, src/pages/Home.jsx, src/pages/DreamDetail.jsx, ruya-backend.3/main.py | Vite proxy eklendi (/api→localhost:8000), handleSave gerçek AI API çağrısı yapıyor, handleGenerateImage /api/generate-image endpoint'ini çağırıyor, backend /api/generate-image endpoint'i eklendi. Backend çalışmıyorsa fallback mekanizması mevcut. |
+| 2026-05-31 | ☀️ Açık tema sistemi eklendi | tailwind.config.js, src/index.css, src/context/ThemeContext.jsx (YENİ), src/App.jsx, src/components/Layout.jsx | D'den ThemeContext, CSS değişkenleri ve light-mode override'ları aktarıldı. Nav bar'a güneş/ay tema toggle butonu eklendi. |
+| 2026-05-31 | 🎤 Mikrofon (Speech-to-Text) düzeltmesi | src/pages/Home.jsx | interimText state'i eklendi, interimTranscript/finalTranscript ayrımı düzeltildi, çift yazım sorunu giderildi |
+| 2026-05-31 | 🖼️ Dinamik görsel oluşturma düzeltmesi | ruya-backend.3/main.py | generate_free_image_url() fonksiyonu rüya metnini ve etiketleri analiz ederek Unsplash'ta içerikle alakalı arama yapacak şekilde yeniden yazıldı |
 | 2026-05-12 | 📱 Capacitor mobil entegrasyonu | capacitor.config.json, nativeAlarm.js, DreamContext.jsx, App.jsx, AndroidManifest.xml, android/ | Capacitor kurulumu, native alarm bildirimleri, platform-aware kod, Android projesi oluşturuldu |
 | 2026-05-12 | 🔊 Alarm ses sistemi eklendi | alarmSounds.js, Alarm.jsx, AlarmRinging.jsx, DreamContext.jsx, App.jsx | Web Audio API ile 6 alarm tonu, ses seçici UI, gerçek zamanlayıcı (AlarmScheduler), alarm veri modeline sound alanı eklendi |
 | 2026-05-12 | 🆕 ARCHITECTURE.md oluşturuldu | ARCHITECTURE.md | Proje mimarisi, dosya yapısı, state yönetimi, routing, veri modelleri ve bilinen sorunlar belgelendi |

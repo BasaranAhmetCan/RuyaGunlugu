@@ -7,10 +7,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        'dream-dark': '#080B14',
-        'dream-mid': '#0E0D1F',
-        'dream-light': '#1E1433',
-        'dream-accent': '#8B5CF6',
+        // CSS değişkenleri ile tema desteği — dark/light mod otomatik geçiş
+        'dream-dark':   'var(--dream-dark)',
+        'dream-mid':    'var(--dream-mid)',
+        'dream-light':  'var(--dream-light)',
+        'dream-accent': 'var(--dream-accent)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

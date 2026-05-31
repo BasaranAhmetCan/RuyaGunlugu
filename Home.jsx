@@ -16,7 +16,6 @@ const DREAM_TAGS = ["Kabus", "Bilinçli (Lucid)", "Tekrarlayan", "Uyku Felci", "
 
 const Home = () => {
   const [dreamText, setDreamText] = useState('');
-  const [interimText, setInterimText] = useState(''); // Geçici (henüz tamamlanmamış) ses metni
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
@@ -43,38 +42,23 @@ const Home = () => {
 
       recognition.onresult = (event) => {
         let finalTranscript = '';
-        let interimTranscript = '';
-
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript;
+            finalTranscript += event.results[i][0].transcript + ' ';
           }
         }
-
-        // Kesinleşmiş metni kalıcı olarak ekle
         if (finalTranscript) {
           setDreamText(prev => prev + finalTranscript);
-          setInterimText(''); // Geçici metni temizle
-        }
-
-        // Geçici metni önizleme olarak göster
-        if (interimTranscript) {
-          setInterimText(interimTranscript);
         }
       };
 
       recognition.onerror = (event) => {
         console.error("Speech recognition error", event.error);
         setIsListening(false);
-        setInterimText('');
       };
 
       recognition.onend = () => {
         setIsListening(false);
-        setInterimText('');
       };
 
       recognitionRef.current = recognition;
@@ -90,7 +74,6 @@ const Home = () => {
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
-      setInterimText('');
     } else {
       recognitionRef.current.start();
       setIsListening(true);
@@ -108,6 +91,7 @@ const Home = () => {
     );
   };
 
+  // İrem'in Canlı Ücretsiz Gemini Sistemiyle %100 Uyumlu Yeni Fonksiyon
   const handleSave = async () => {
     if (!dreamText.trim()) return;
     
@@ -117,64 +101,22 @@ const Home = () => {
     }
     
     setIsAnalyzing(true);
-
+    
     try {
-      // Backend'e gerçek AI yorumlama isteği gönder
-      const response = await fetch('/api/analyze-dream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: dreamText,
-          zodiac: userProfile?.zodiac || 'Genel'
-        })
+      // 1. Senin yazdığın canlı Gemini backend'ine bağlanıp cevabı sabırla bekliyoruz (await)
+      const newDreamId = await addDream({
+        text: dreamText,
+        keywords: selectedTags.length > 0 ? selectedTags : ["GİZEM", "BİLİNÇALTI"]
       });
-
-      if (!response.ok) throw new Error('Backend yanıt vermedi');
-
-      const data = await response.json();
       
       setIsAnalyzing(false);
       
-      // Eger Gemini API 429 Kotası dolmuşsa veya hata mesajı içeriyorsa
-      let classicMeaning = data.classic_meaning || '';
-      let isQuotaError = classicMeaning.includes('429') || classicMeaning.includes('RESOURCE_EXHAUSTED') || classicMeaning.includes('Quota exceeded');
+      // 2. Canlı gelen o kesin ID ile detay sayfasını açıyoruz, artık hata bitti!
+      navigate(`/dream/${newDreamId}`);
       
-      const newDreamId = addDream({
-        text: dreamText,
-        keywords: data.keywords?.length > 0 ? data.keywords : (selectedTags.length > 0 ? selectedTags : ['GİZEM', 'BİLİNÇALTI']),
-        interpretations: {
-          classic: isQuotaError ? 'Google Yapay Zeka (Gemini) ücretsiz kullanım kotası dolmuştur. Lütfen daha sonra tekrar deneyin.' : classicMeaning,
-          freud: isQuotaError ? 'Google Yapay Zeka (Gemini) ücretsiz kullanım kotası dolmuştur.' : (data.freud_meaning || ''),
-          jung: isQuotaError ? 'Google Yapay Zeka (Gemini) ücretsiz kullanım kotası dolmuştur.' : (data.jung_meaning || ''),
-          islamic: isQuotaError ? 'Google Yapay Zeka (Gemini) ücretsiz kullanım kotası dolmuştur.' : (data.islamic_meaning || ''),
-          astrological: isQuotaError ? 'Google Yapay Zeka (Gemini) ücretsiz kullanım kotası dolmuştur.' : (data.astrological_meaning || ''),
-        },
-        sentiment: data.sentiment?.toLowerCase().includes('pozitif') ? 'positive'
-                 : data.sentiment?.toLowerCase().includes('negatif') ? 'negative'
-                 : 'neutral',
-        imageUrl: data.image_url || null
-      });
-
-      navigate(`/dream/${newDreamId}`);
-
-    } catch (err) {
-      // Backend çalışmıyorsa sahte yorumlarla devam et
-      console.warn('Backend erişilemiyor, sahte yorumlar kullanılıyor:', err.message);
+    } catch (error) {
+      console.error("Yönlendirme sırasında hata oluştu:", error);
       setIsAnalyzing(false);
-      const newDreamId = addDream({
-        text: dreamText,
-        keywords: selectedTags.length > 0 ? selectedTags : ['GİZEM', 'BİLİNÇALTI'],
-        interpretations: {
-          classic: 'Rüyanızdaki imgeler, yakın zamanda hayatınızda belirsizliklerle yüzleşeceğinize ve bunları aşarak feraha çıkacağınıza işaret ediyor.',
-          freud: 'Bilinçaltınızdaki günlük endişelerin ve saklı tuttuğunuz dürtülerin doğrudan dışavurumudur.',
-          jung: 'Kolektif bilinçdışınızdan gelen uyarıcı arketipsel figürleri çağrıştırıyor. Bireyleşme yolculuğunuzda önemli bir adım.',
-          islamic: 'Bu rüya, iç huzuru bulmak için manevi yönünüze daha fazla ağırlık vermeniz gerektiğine dair bir işarettir.',
-          astrological: `${userProfile?.zodiac || 'Burcunuz'} etkisiyle gezegensel transitler, bu rüyanın karmik döngülerinizle bağlantılı olduğunu gösteriyor.`
-        },
-        sentiment: 'neutral',
-        imageUrl: null
-      });
-      navigate(`/dream/${newDreamId}`);
     }
   };
 
@@ -187,12 +129,9 @@ const Home = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md flex justify-between items-center pt-6 pb-4"
       >
-        <div className="flex items-center gap-3">
-          <img src="/icon.png" alt="Logo" className="w-8 h-8 drop-shadow-[0_0_15px_rgba(139,92,246,0.5)]" />
-          <h1 className="text-xl font-light text-white/50 tracking-[0.3em] uppercase">
-            Rüya Günlüğü
-          </h1>
-        </div>
+        <h1 className="text-xl font-light text-white/50 tracking-[0.3em] uppercase">
+          Rüya Günlüğü
+        </h1>
         {userProfile && (
           <div className="flex items-center gap-2 bg-white/5 pl-4 pr-2 py-2 rounded-full border border-white/10 group">
             <User size={14} className="text-dream-accent" />
@@ -265,11 +204,8 @@ const Home = () => {
                 <div className="relative group w-full">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-dream-accent/0 via-dream-accent/0 to-dream-accent/0 rounded-3xl blur opacity-0 group-focus-within:opacity-20 group-focus-within:via-dream-accent/40 transition-all duration-700 pointer-events-none" />
                   <textarea
-                    value={dreamText + (interimText ? interimText : '')}
-                    onChange={(e) => {
-                      // Manuel yazımda interimText yoksa dreamText'i güncelle
-                      if (!isListening) setDreamText(e.target.value);
-                    }}
+                    value={dreamText}
+                    onChange={(e) => setDreamText(e.target.value)}
                     disabled={isAnalyzing}
                     placeholder={placeholder}
                     className="

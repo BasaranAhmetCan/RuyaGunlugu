@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import { Capacitor } from '@capacitor/core';
 
 import { DreamProvider, useDreamContext } from './context/DreamContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Journal from './pages/Journal';
@@ -139,11 +140,13 @@ const AnimatedRoutes = () => {
 
 function App() {
   return (
-    <DreamProvider>
-      <Router>
-        <AnimatedRoutes />
-      </Router>
-    </DreamProvider>
+    <ThemeProvider>
+      <DreamProvider>
+        <Router>
+          <AnimatedRoutes />
+        </Router>
+      </DreamProvider>
+    </ThemeProvider>
   );
 }
 
